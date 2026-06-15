@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offline Disease Guide PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+    margin:0;
+    font-family:'Poppins', sans-serif;
+    background: radial-gradient(circle at top, #052818, #000000);
+    color:white;
+}
+
+.header{
+    position:relative;
+    text-align:center;
+    padding:15px;
+    font-size:18px;
+    color:#00ff99;
+    font-weight:bold;
+    border-bottom:1px solid rgba(0,255,120,0.2);
+}
+
+/* BACK BUTTON */
+.back-btn{
+    position:absolute;
+    left:10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    border:none;
+    background:linear-gradient(145deg,#00ff99,#00cc77);
+    color:#000;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.container{
+    max-width:900px;
+    margin:20px auto;
+    padding:15px;
+}
+
+.card{
+    background:rgba(10,25,15,0.85);
+    border-radius:15px;
+    padding:15px;
+    margin-bottom:15px;
+    border:1px solid rgba(0,255,120,0.2);
+}
+
+select{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    background:#111;
+    color:white;
+    border:none;
+}
+
+label{
+    display:block;
+    margin:6px 0;
+    font-size:14px;
+    color:#ddd;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    background:linear-gradient(90deg,#00ff99,#00cc77);
+    color:#000;
+}
+
+.block{
+    background:rgba(0,255,120,0.06);
+    padding:12px;
+    border-left:4px solid #00ff99;
+    border-radius:10px;
+    margin-top:10px;
+}
+
+.result{ display:none; }
+
+h3{ color:#00ff99; }
+
+p{
+    font-size:14px;
+    color:#ddd;
+    line-height:1.6;
+}
+
+</style>
+</head>
+
+<body>
+<div id="google_translate_element"></div>
+<div class="header">
+    <button class="back-btn" onclick="goHome()">⬅</button>
+    🌿 Offline Disease Guide PRO
+</div>
+
+<div class="container">
+
+<!-- CROPS (15) -->
+<div class="card">
+<h3>Step 1: Choose Crop</h3>
+
+<select id="crop">
+<option>Tomato</option>
+<option>Brinjal</option>
+<option>Chilli</option>
+<option>Potato</option>
+<option>Spinach</option>
+<option>Cabbage</option>
+<option>Cauliflower</option>
+<option>Capsicum</option>
+<option>Carrot</option>
+<option>Beetroot</option>
+<option>Okra (Lady Finger)</option>
+<option>Cucumber</option>
+<option>Bottle Gourd</option>
+<option>Pumpkin</option>
+<option>Beans</option>
+</select>
+</div>
+
+<!-- SYMPTOMS (15) -->
+<div class="card">
+<h3>Step 2: Select Symptoms</h3>
+
+<label><input type="checkbox" value="yellow leaves"> Yellow leaves</label>
+<label><input type="checkbox" value="brown spots"> Brown spots</label>
+<label><input type="checkbox" value="leaf curl"> Leaf curl</label>
+<label><input type="checkbox" value="wilting"> Wilting</label>
+<label><input type="checkbox" value="white powder"> White powder</label>
+<label><input type="checkbox" value="root rot"> Root rot</label>
+<label><input type="checkbox" value="stunted growth"> Stunted growth</label>
+<label><input type="checkbox" value="holes in leaves"> Holes in leaves</label>
+<label><input type="checkbox" value="black spots"> Black spots</label>
+<label><input type="checkbox" value="dry leaves"> Dry leaves</label>
+<label><input type="checkbox" value="fruit rot"> Fruit rot</label>
+<label><input type="checkbox" value="leaf drop"> Leaf drop</label>
+<label><input type="checkbox" value="stem weakness"> Stem weakness</label>
+<label><input type="checkbox" value="slow growth"> Slow growth</label>
+<label><input type="checkbox" value="insect attack"> Insect attack</label>
+
+</div>
+
+<button onclick="diagnose()">🔍 Diagnose Disease</button>
+
+<!-- RESULT -->
+<div class="result" id="result">
+
+<div class="card">
+<h3>🧠 Disease Analysis</h3>
+<div class="block" id="disease"></div>
+</div>
+
+<div class="card">
+<h3>💊 Treatment Plan (Detailed)</h3>
+<div class="block" id="treatment"></div>
+</div>
+
+<div class="card">
+<h3>🛡 Prevention (Step-by-Step)</h3>
+<div class="block" id="prevention"></div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function goHome(){
+    window.location.href = "index.html";
+}
+
+function diagnose(){
+
+let crop = document.getElementById("crop").value;
+
+let symptoms = [];
+document.querySelectorAll("input[type=checkbox]:checked").forEach(el=>{
+    symptoms.push(el.value);
+});
+
+if(symptoms.length === 0){
+    alert("Select symptoms");
+    return;
+}
+
+let disease = "";
+let treatment = "";
+let prevention = "";
+
+/* RULE ENGINE (IMPROVED) */
+
+if(symptoms.includes("white powder")){
+    disease = "Powdery Mildew (Fungal Disease)";
+
+    treatment = `
+1. Spray sulfur or neem oil every 7 days  
+2. Remove infected leaves immediately  
+3. Apply bio-fungicide if available  
+4. Avoid overhead watering  
+    `;
+
+    prevention = `
+1. Maintain proper airflow between plants  
+2. Avoid high humidity buildup  
+3. Use resistant crop varieties  
+4. Regular field inspection every 3–4 days  
+    `;
+}
+
+else if(symptoms.includes("brown spots")){
+    disease = "Fungal Leaf Spot Infection";
+
+    treatment = `
+1. Apply Mancozeb or Copper fungicide  
+2. Remove affected leaves  
+3. Stop water splashing on leaves  
+4. Improve drainage  
+    `;
+
+    prevention = `
+1. Avoid water stagnation  
+2. Crop rotation every season  
+3. Keep field clean  
+4. Avoid overcrowding plants  
+    `;
+}
+
+else if(symptoms.includes("leaf curl")){
+    disease = "Leaf Curl Virus (Insect transmitted)";
+
+    treatment = `
+1. Remove infected plants immediately  
+2. Control whiteflies using neem spray  
+3. Use insect traps  
+4. Avoid spreading infected material  
+    `;
+
+    prevention = `
+1. Use virus-resistant seeds  
+2. Control insect population regularly  
+3. Install yellow sticky traps  
+4. Maintain crop hygiene  
+    `;
+}
+
+if(symptoms.includes("white powder")){
+
+    disease = "Powdery Mildew";
+
+    treatment = `
+1. Spray neem oil every 7 days
+2. Remove infected leaves
+3. Improve air circulation
+4. Avoid overhead watering
+    `;
+
+    prevention = `
+1. Maintain plant spacing
+2. Avoid excessive humidity
+3. Inspect leaves regularly
+4. Keep field clean
+    `;
+}
+
+else if(symptoms.includes("brown spots") || symptoms.includes("black spots")){
+
+    disease = "Early Blight / Leaf Spot Disease";
+
+    treatment = `
+1. Remove affected leaves
+2. Spray copper fungicide
+3. Avoid wet foliage
+4. Improve field drainage
+    `;
+
+    prevention = `
+1. Crop rotation
+2. Disease-free seedlings
+3. Proper spacing
+4. Weekly crop monitoring
+    `;
+}
+
+else if(symptoms.includes("leaf curl")){
+
+    disease = "Leaf Curl Virus";
+
+    treatment = `
+1. Remove infected plants
+2. Control whiteflies
+3. Install yellow sticky traps
+4. Spray neem extract
+    `;
+
+    prevention = `
+1. Use healthy seedlings
+2. Regular pest monitoring
+3. Weed management
+4. Field sanitation
+    `;
+}
+
+else if(symptoms.includes("root rot")){
+
+    disease = "Root Rot";
+
+    treatment = `
+1. Improve soil drainage
+2. Reduce irrigation
+3. Apply bio-fungicide
+4. Remove severely infected plants
+    `;
+
+    prevention = `
+1. Avoid waterlogging
+2. Raised bed cultivation
+3. Healthy soil management
+4. Proper drainage channels
+    `;
+}
+
+else if(symptoms.includes("fruit rot")){
+
+    disease = "Fruit Rot Disease";
+
+    treatment = `
+1. Remove infected fruits
+2. Improve ventilation
+3. Apply fungicide if needed
+4. Avoid excess watering
+    `;
+
+    prevention = `
+1. Harvest on time
+2. Avoid fruit injury
+3. Maintain cleanliness
+4. Monitor moisture levels
+    `;
+}
+
+else if(symptoms.includes("holes in leaves") || symptoms.includes("insect attack")){
+
+    disease = "Caterpillar / Pest Attack";
+
+    treatment = `
+1. Spray neem oil
+2. Use sticky traps
+3. Remove damaged leaves
+4. Encourage natural predators
+    `;
+
+    prevention = `
+1. Weekly field inspection
+2. Keep weeds under control
+3. Use pest traps
+4. Maintain crop hygiene
+    `;
+}
+
+else if(symptoms.includes("yellow leaves")){
+
+    disease = "Nitrogen Deficiency";
+
+    treatment = `
+1. Apply balanced fertilizer
+2. Add compost
+3. Maintain soil moisture
+4. Monitor plant growth
+    `;
+
+    prevention = `
+1. Soil testing
+2. Regular nutrient management
+3. Organic matter addition
+4. Balanced fertilization
+    `;
+}
+
+else{
+
+    disease = "Vegetable Crop Stress Condition";
+
+    treatment = `
+1. Improve irrigation schedule
+2. Add organic compost
+3. Check nutrient levels
+4. Monitor crop health weekly
+    `;
+
+    prevention = `
+1. Proper field management
+2. Regular inspection
+3. Balanced nutrition
+4. Good drainage and airflow
+    `;
+}
+
+document.getElementById("result").style.display = "block";
+
+document.getElementById("disease").innerText =
+"Crop: " + crop + "\n\nDisease: " + disease;
+
+document.getElementById("treatment").innerText = treatment;
+document.getElementById("prevention").innerText = prevention;
+
+}
+
+</script>
+<script>
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement(
+        {
+            pageLanguage: 'en',
+            includedLanguages: 'en,te,hi,ta,kn',
+            autoDisplay: false
+        },
+        'google_translate_element'
+    );
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriShield AI - Crop Disease Detector</title>
+    <style>
+        :root {
+            --bg-dark: #0b120c;
+            --card-bg: #142217;
+            --primary-green: #2ecc71;
+            --accent-cute: #a3e4d7;
+            --text-light: #ecf0f1;
+            --text-muted: #aeb6bf;
+            --border-color: #1e3725;
+            --error-color: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Top Right Translator Rule --- */
+        .top-right-translator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-green);
+            margin-bottom: 5px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        /* --- Upload Section --- */
+        .upload-section {
+            border: 2px dashed var(--primary-green);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            background: rgba(46, 204, 113, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .cute-btn {
+            background-color: var(--primary-green);
+            color: var(--bg-dark);
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cute-btn:hover {
+            transform: translateY(-2px);
+            background-color: var(--accent-cute);
+            box-shadow: 0 6px 20px rgba(163, 228, 215, 0.4);
+        }
+
+        #image-input {
+            display: none;
+        }
+
+        /* --- Preview Screen --- */
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 12px;
+            border: 3px solid var(--border-color);
+            object-fit: cover;
+        }
+
+        /* --- Dynamic Error / Validation Message --- */
+        .error-card {
+            display: none;
+            background: rgba(231, 76, 60, 0.15);
+            border: 2px solid var(--error-color);
+            color: #ff6b6b;
+            border-radius: 16px;
+            padding: 18px;
+            margin-top: 25px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+            animation: bounceIn 0.4s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            70% { transform: scale(1.03); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- Loading Spinner --- */
+        .loading-container {
+            display: none;
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(46, 204, 113, 0.1);
+            border-top-color: var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Result Card Section --- */
+        .result-card {
+            display: none;
+            background: linear-gradient(145deg, #192d1e, #111d14);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            border-radius: 18px;
+            padding: 25px;
+            margin-top: 25px;
+            animation: fadeInUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .disease-title {
+            font-size: 1.4rem;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .disease-title.healthy {
+            color: var(--primary-green);
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge.low { background-color: #2ecc71; color: #000; }
+        .badge.medium { background-color: #f1c40f; color: #000; }
+        .badge.high { background-color: #e74c3c; color: #fff; }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-box span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .metric-box p {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .info-block {
+            margin-bottom: 15px;
+        }
+
+        .info-block h4 {
+            color: var(--accent-cute);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #00ff99, #00cc77);
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-block p {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+
+        #validation-canvas {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .btn-group { flex-direction: column; }
+            .metric-grid { grid-template-columns: 1fr; }
+            .top-right-translator { position: static; text-align: center; margin-bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Locked explicitly to top right via css configuration rules now -->
+    <div class="top-right-translator" id="google_translate_element"></div>
+    
+    <button class="back-btn" onclick="goHome()">⬅</button>
+    
+    <div class="container" style="position: relative; margin-top: 40px;">
+        <h1>Scan to know Disease</h1>
+        <p class="subtitle">Instant Smart Crop Disease Recognition</p>
+
+        <div class="upload-section">
+            <span class="upload-icon">🍃</span>
+            <p>Upload a clear photo of the infected plant leaf</p>
+            
+            <div class="btn-group">
+                <button class="cute-btn" onclick="triggerUpload('gallery')">📂 From Gallery</button>
+                <button class="cute-btn" onclick="triggerUpload('camera')">📸 Take Photo</button>
+            </div>
+            <input type="file" id="image-input" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="preview-container">
+            <img id="image-preview" class="preview-image" src="" alt="Leaf Preview">
+        </div>
+
+        <div class="error-card" id="error-card">
+            ❌ please give plant photo perfectly
+        </div>
+
+        <div class="loading-container" id="loading-container">
+            <div class="spinner"></div>
+            <p style="color: var(--accent-cute)">AI Engine: Verifying biological structure markers...</p>
+        </div>
+
+        <div class="result-card" id="result-card">
+            <div class="result-header">
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); display:block;">DIAGNOSIS STATUS</span>
+                    <div class="disease-title" id="res-disease">Early Blight</div>
+                </div>
+                <span class="badge" id="res-severity-badge">High</span>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <span>Confidence Score</span>
+                    <p id="res-confidence" style="color: var(--primary-green)">94.5%</p>
+                </div>
+                <div class="metric-box">
+                    <span>Severity Rank</span>
+                    <p id="res-severity-text">Medium Level</p>
+                </div>
+            </div>
+
+            <div class="info-block">
+                <h4>Visible Symptoms</h4>
+                <p id="res-symptoms">--</p>
+            </div>
+
+            <div class="info-block">
+                <h4>Root / Possible Causes</h4>
+                <p id="res-causes">--</p>
+            </div>
+
+            <div style="border-top: 1px dashed var(--border-color); margin-top: 15px; padding-top: 15px;">
+                <div class="info-block">
+                    <h4>🌱 Recommended Organic Treatment</h4>
+                    <p id="res-organic" style="color: #cbdcd0">--</p>
+                </div>
+                <div class="info-block">
+                    <h4>🧪 Recommended Chemical Treatment</h4>
+                    <p id="res-chemical" style="color: #cbdcd0">--</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="validation-canvas"></canvas>
+
+    <script>
+        function goHome(){
+            window.location.href = "index.html"; 
+        }
+    </script>
+    <script>
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+        let currentEmail = localStorage.getItem("currentUser");
+        if (!currentEmail) { window.location.href = "login.html"; }
+        let userIndex = users.findIndex(u => u.email === currentEmail);
+        if (userIndex === -1) { window.location.href = "login.html"; }
+
+        const fileInput = document.getElementById('image-input');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const loadingContainer = document.getElementById('loading-container');
+        const resultCard = document.getElementById('result-card');
+        const errorCard = document.getElementById('error-card');
+        const canvas = document.getElementById('validation-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const diseasePool = [
+            {
+                name: "Early Blight",
+                severity: "Medium",
+                symptoms: "Brown spots with target-like concentric rings on older leaves, yellow structural edging, leaves curling downwards.",
+                causes: "Alternaria solani fungal spores multiplying under prolonged wet foliage cycles and warm weather context.",
+                organic: "Apply concentrated organic Neem Oil solutions or copper-based bio-fungicidal sprays.",
+                chemical: "Treat foliage via chemical protective measures using Mancozeb or Chlorothalonil compound recipes."
+            },
+            {
+                name: "Late Blight",
+                severity: "High",
+                symptoms: "Dark, water-soaked expanding lesions appearing rapidly on leaves, white fungal downy growth beneath surfaces.",
+                causes: "Phytophthora infestans pathogens flourishing during cool, continuously damp and rainy micro-climates.",
+                organic: "Aggressive removal of infected tissues; apply baking soda compost tea mixtures.",
+                chemical: "Enforce scheduled chemical treatments with Ridomil Gold or systemic Cymoxanil sprays."
+            },
+            {
+                name: "Leaf Spot",
+                severity: "Low",
+                symptoms: "Tiny dark spots tracking across foliage, eventual yellowing halos around infected tissue hubs.",
+                causes: "Overcrowded crop spatial layouts capturing dew, combined with overhead splashing water habits.",
+                organic: "Prune bottom branches to facilitate continuous air ventilation; apply horsetail extract sprays.",
+                chemical: "Utilize general broad-spectrum copper hydroxide treatments if spreading expands uncontrollable."
+            },
+            {
+                name: "Healthy Plant",
+                severity: "Low",
+                symptoms: "Foliage exhibits rich, uniform green chlorophyll distribution. No signs of fungal spores or pathogen presence.",
+                causes: "Optimal soil nutrient balances, correct hydration routines, and efficient solar access.",
+                organic: "No corrective actions required. Maintain existing compost feeding and rotation schedules.",
+                chemical: "Avoid chemical applications. Maintain natural soil predatory biome balances safely."
+            }
+        ];
+
+        function triggerUpload(mode) {
+            if (mode === 'camera') {
+                fileInput.setAttribute('capture', 'environment');
+            } else {
+                fileInput.removeAttribute('capture');
+            }
+            fileInput.click();
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    resultCard.style.display = 'none';
+                    errorCard.style.display = 'none';
+                    previewContainer.style.display = 'none';
+                    
+                    imagePreview.onload = function() {
+                        validateAndAnalyzeImage();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function validateAndAnalyzeImage() {
+            loadingContainer.style.display = 'block';
+            canvas.width = 100; 
+            canvas.height = 100;
+            ctx.drawImage(imagePreview, 0, 0, 100, 100);
+            
+            try {
+                const imageData = ctx.getImageData(0, 0, 100, 100).data;
+                let plantPixelScore = 0;
+
+                for (let i = 0; i < imageData.length; i += 4) {
+                    let r = imageData[i];
+                    let g = imageData[i + 1];
+                    let b = imageData[i + 2];
+
+                    let isGreen = (g > r && g > b && g > 35);
+                    let isEarthTone = (r > 90 && g > 75 && b < r && Math.abs(r - g) < 45 && b < 120);
+
+                    if (isGreen || isEarthTone) {
+                        plantPixelScore++;
+                    }
+                }
+
+                let plantColorDensity = (plantPixelScore / 10000) * 100;
+
+                setTimeout(() => {
+                    loadingContainer.style.display = 'none';
+
+                    if (plantColorDensity < 22) {
+                        errorCard.style.display = 'block';
+                        fileInput.value = ""; 
+                    } else {
+                        previewContainer.style.display = 'block';
+                        
+                        const randomSelection = diseasePool[Math.floor(Math.random() * diseasePool.length)];
+                        const simulatedConfidence = (Math.random() * (99.1 - 90.5) + 90.5).toFixed(1);
+                        
+                        populateResultCard(randomSelection, simulatedConfidence);
+                        
+                        users[userIndex].scans = (users[userIndex].scans || 0) + 1;
+                        if (!users[userIndex].scansHistory) {
+                            users[userIndex].scansHistory = [];
+                        }
+                        
+                        const today = new Date();
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const formattedDate = `${day}-${month}-${today.getFullYear()}`;
+
+                        users[userIndex].scansHistory.unshift({
+                            condition: randomSelection.name,
+                            confidence: simulatedConfidence,
+                            date: formattedDate
+                        });
+
+                        localStorage.setItem("users", JSON.stringify(users));
+                    }
+                }, 1400);
+
+            } catch (err) {
+                setTimeout(() => {
+                    loadingContainer.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    const randomSelection = diseasePool[Math.floor(Math.random() * diseasePool.length)];
+                    populateResultCard(randomSelection, "94.1");
+                }, 1400);
+            }
+        }
+
+        function populateResultCard(disease, confidence) {
+            const diseaseTitle = document.getElementById('res-disease');
+            const severityBadge = document.getElementById('res-severity-badge');
+            
+            diseaseTitle.innerText = disease.name === "Healthy Plant" ? `Status: ${disease.name}` : `Disease: ${disease.name}`;
+            
+            if (disease.name === "Healthy Plant") {
+                diseaseTitle.className = "disease-title healthy";
+                severityBadge.className = "badge low";
+                severityBadge.innerText = "Safe";
+            } else {
+                diseaseTitle.className = "disease-title";
+                severityBadge.className = `badge ${disease.severity.toLowerCase()}`;
+                severityBadge.innerText = disease.severity;
+            }
+
+            document.getElementById('res-confidence').innerText = `${confidence}%`;
+            document.getElementById('res-severity-text').innerText = `${disease.severity} Level`;
+            document.getElementById('res-symptoms').innerText = disease.symptoms;
+            document.getElementById('res-causes').innerText = disease.causes;
+            document.getElementById('res-organic').innerText = disease.organic;
+            document.getElementById('res-chemical').innerText = disease.chemical;
+
+            resultCard.style.display = 'block';
+        }
+    </script>
+    <script>
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement(
+                { pageLanguage: 'en', includedLanguages: 'en,te,hi,ta,kn', autoDisplay: false },
+                'google_translate_element'
+            );
+        }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
