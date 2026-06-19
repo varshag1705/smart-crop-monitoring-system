@@ -343,7 +343,7 @@
                     <p id="res-confidence" style="color: var(--primary-green)">94.5%</p>
                 </div>
                 <div class="metric-box">
-                    <span>Severity Rank</span>
+                    <span>Damage Severity</span>
                     <p id="res-severity-text">Medium Level</p>
                 </div>
             </div>
@@ -394,10 +394,15 @@
         const canvas = document.getElementById('validation-canvas');
         const ctx = canvas.getContext('2d');
         
+        // Expanded to include multi-stage severity classifications and surface damage metrics
         const diseasePool = [
             {
                 name: "Early Blight",
-                severity: "Medium",
+                severityLevels: [
+                    { level: "Low", stage: "Stage 1 (Initial Spoting)", damage: "5% - 15%" },
+                    { level: "Medium", stage: "Stage 2 (Vegetative Spread)", damage: "16% - 40%" },
+                    { level: "High", stage: "Stage 3 (Advanced Necrosis)", damage: "41% - 75%" }
+                ],
                 symptoms: "Brown spots with target-like concentric rings on older leaves, yellow structural edging, leaves curling downwards.",
                 causes: "Alternaria solani fungal spores multiplying under prolonged wet foliage cycles and warm weather context.",
                 organic: "Apply concentrated organic Neem Oil solutions or copper-based bio-fungicidal sprays.",
@@ -405,7 +410,11 @@
             },
             {
                 name: "Late Blight",
-                severity: "High",
+                severityLevels: [
+                    { level: "Medium", stage: "Stage 2 (Early Lesions)", damage: "10% - 25%" },
+                    { level: "High", stage: "Stage 3 (Active Outbreak)", damage: "26% - 60%" },
+                    { level: "High", stage: "Stage 4 (Defoliation Peak)", damage: "61% - 95%" }
+                ],
                 symptoms: "Dark, water-soaked expanding lesions appearing rapidly on leaves, white fungal downy growth beneath surfaces.",
                 causes: "Phytophthora infestans pathogens flourishing during cool, continuously damp and rainy micro-climates.",
                 organic: "Aggressive removal of infected tissues; apply baking soda compost tea mixtures.",
@@ -413,7 +422,11 @@
             },
             {
                 name: "Leaf Spot",
-                severity: "Low",
+                severityLevels: [
+                    { level: "Low", stage: "Stage 1 (Chlorotic Specks)", damage: "2% - 10%" },
+                    { level: "Low", stage: "Stage 2 (Localized Clusters)", damage: "11% - 20%" },
+                    { level: "Medium", stage: "Stage 3 (Confluent Spotting)", damage: "21% - 45%" }
+                ],
                 symptoms: "Tiny dark spots tracking across foliage, eventual yellowing halos around infected tissue hubs.",
                 causes: "Overcrowded crop spatial layouts capturing dew, combined with overhead splashing water habits.",
                 organic: "Prune bottom branches to facilitate continuous air ventilation; apply horsetail extract sprays.",
@@ -421,7 +434,9 @@
             },
             {
                 name: "Healthy Plant",
-                severity: "Low",
+                severityLevels: [
+                    { level: "Low", stage: "Stage 0 (No Infection)", damage: "0%" }
+                ],
                 symptoms: "Foliage exhibits rich, uniform green chlorophyll distribution. No signs of fungal spores or pathogen presence.",
                 causes: "Optimal soil nutrient balances, correct hydration routines, and efficient solar access.",
                 organic: "No corrective actions required. Maintain existing compost feeding and rotation schedules.",
@@ -493,7 +508,10 @@
                         const randomSelection = diseasePool[Math.floor(Math.random() * diseasePool.length)];
                         const simulatedConfidence = (Math.random() * (99.1 - 90.5) + 90.5).toFixed(1);
                         
-                        populateResultCard(randomSelection, simulatedConfidence);
+                        // Pick a dynamic sub-stage out of the array for this disease asset
+                        const assignedSeverity = randomSelection.severityLevels[Math.floor(Math.random() * randomSelection.severityLevels.length)];
+                        
+                        populateResultCard(randomSelection, assignedSeverity, simulatedConfidence);
                         
                         users[userIndex].scans = (users[userIndex].scans || 0) + 1;
                         if (!users[userIndex].scansHistory) {
@@ -508,6 +526,8 @@
                         users[userIndex].scansHistory.unshift({
                             condition: randomSelection.name,
                             confidence: simulatedConfidence,
+                            severity: `${assignedSeverity.level} (${assignedSeverity.stage})`,
+                            damagePercentage: assignedSeverity.damage,
                             date: formattedDate
                         });
 
@@ -520,12 +540,13 @@
                     loadingContainer.style.display = 'none';
                     previewContainer.style.display = 'block';
                     const randomSelection = diseasePool[Math.floor(Math.random() * diseasePool.length)];
-                    populateResultCard(randomSelection, "94.1");
+                    const fallbackSeverity = randomSelection.severityLevels[0];
+                    populateResultCard(randomSelection, fallbackSeverity, "94.1");
                 }, 1400);
             }
         }
 
-        function populateResultCard(disease, confidence) {
+        function populateResultCard(disease, severityInfo, confidence) {
             const diseaseTitle = document.getElementById('res-disease');
             const severityBadge = document.getElementById('res-severity-badge');
             
@@ -537,12 +558,15 @@
                 severityBadge.innerText = "Safe";
             } else {
                 diseaseTitle.className = "disease-title";
-                severityBadge.className = `badge ${disease.severity.toLowerCase()}`;
-                severityBadge.innerText = disease.severity;
+                severityBadge.className = `badge ${severityInfo.level.toLowerCase()}`;
+                severityBadge.innerText = severityInfo.level;
             }
 
             document.getElementById('res-confidence').innerText = `${confidence}%`;
-            document.getElementById('res-severity-text').innerText = `${disease.severity} Level`;
+            
+            // Layout implementation injection displaying Tier Level alongside localized Stage & Percentage metrics
+            document.getElementById('res-severity-text').innerText = `${severityInfo.level} (${severityInfo.stage}) [Damage: ${severityInfo.damage}]`;
+            
             document.getElementById('res-symptoms').innerText = disease.symptoms;
             document.getElementById('res-causes').innerText = disease.causes;
             document.getElementById('res-organic').innerText = disease.organic;
